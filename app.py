@@ -3,10 +3,13 @@ from peft import PeftModel, PeftConfig
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
+# Ensure 'bitsandbytes' and other dependencies are installed correctly
+# This code will work assuming you are using CPU-only
+
 # Load the model and tokenizer
 config = PeftConfig.from_pretrained("MISSAOUI/llama_model_2")
-base_model = AutoModelForCausalLM.from_pretrained("NousResearch/Llama-2-7b-chat-hf")
-model = PeftModel.from_pretrained(base_model, "MISSAOUI/llama_model_2")
+base_model = AutoModelForCausalLM.from_pretrained("NousResearch/Llama-2-7b-chat-hf", device_map="cpu")  # Ensure using CPU
+model = PeftModel.from_pretrained(base_model, "MISSAOUI/llama_model_2", device_map="cpu")  # Ensure using CPU
 tokenizer = AutoTokenizer.from_pretrained("MISSAOUI/llama_model_2")
 
 # Streamlit app layout
@@ -26,4 +29,3 @@ if st.button("Send"):
         st.write(f"Chatbot: {response}")
     else:
         st.write("Please enter a message.")
-
