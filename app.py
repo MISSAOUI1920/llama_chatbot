@@ -1,31 +1,26 @@
 import streamlit as st
-from peft import PeftModel, PeftConfig
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
 
 # Ensure 'bitsandbytes' and other dependencies are installed correctly
 # This code will work assuming you are using CPU-only
 
 # Load the model and tokenizer
-config = PeftConfig.from_pretrained("MISSAOUI/llama_model_2")
-base_model = AutoModelForCausalLM.from_pretrained("NousResearch/Llama-2-7b-chat-hf", device_map="cpu")  # Ensure using CPU
-model = PeftModel.from_pretrained(base_model, "MISSAOUI/llama_model_2", device_map="cpu")  # Ensure using CPU
-tokenizer = AutoTokenizer.from_pretrained("MISSAOUI/llama_model_2")
+from transformers import AutoModelForCausalLM, AutoTokenizer
+import sys
+import os 
+
+model_id = os.getcwd()
+if len(sys.argv) > 1:
+    model_id = sys.argv[1]
+
+tokenizer = AutoTokenizer.from_pretrained(model_id)
+model = AutoModelForCausalLM.from_pretrained(model_id).cuda().bfloat16()
+prompt = "Lily picked up a flower."
+inputs = tokenizer(prompt, return_tensors="pt", return_token_type_ids=False).to('cuda')
+out = model.generate(**inputs, max_new_tokens=80).ravel()
+out = tokenizer.decode(out)
 
 # Streamlit app layout
 st.title("Chatbot with LLaMA Model")
 st.write("Enter your message below and get a response from the chatbot.")
-
-user_input = st.text_input("You: ")
-
-if st.button("Send"):
-    if user_input:
-        input_ids = tokenizer.encode(user_input, return_tensors="pt")
-        
-        with torch.no_grad():
-            output = model.generate(input_ids, max_length=50, num_return_sequences=1)
-        
-        response = tokenizer.decode(output[0], skip_special_tokens=True)
-        st.write(f"Chatbot: {response}")
-    else:
-        st.write("Please enter a message.")
+st.write(f"Chatbot: {out}")
