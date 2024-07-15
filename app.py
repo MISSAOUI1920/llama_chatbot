@@ -9,16 +9,20 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 import sys
 import os 
 
-model_id = os.getcwd()
-if len(sys.argv) > 1:
-    model_id = sys.argv[1]
+tokenizer = AutoTokenizer.from_pretrained("Maykeye/TinyLLama-v0")
+model = AutoModelForCausalLM.from_pretrained("Maykeye/TinyLLama-v0")
 
-tokenizer = AutoTokenizer.from_pretrained(model_id)
-model = AutoModelForCausalLM.from_pretrained(model_id).cuda().bfloat16()
-prompt = "Lily picked up a flower."
-inputs = tokenizer(prompt, return_tensors="pt", return_token_type_ids=False).to('cuda')
-out = model.generate(**inputs, max_new_tokens=80).ravel()
-out = tokenizer.decode(out)
+# Define the prompt you want to test
+prompt = "Once upon a time in a land far, far away,"
+
+# Encode the prompt
+inputs = tokenizer(prompt, return_tensors="pt")
+
+# Generate text
+output = model.generate(inputs.input_ids, max_length=100, num_return_sequences=1)
+
+# Decode the generated text
+out= tokenizer.decode(output[0], skip_special_tokens=True)
 
 # Streamlit app layout
 st.title("Chatbot with LLaMA Model")
